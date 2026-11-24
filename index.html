@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>PYRAMIDS MINER</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--gold:#f5b82e;--bg:#090704;--panel:#171108;--muted:#b9a783}
+*{box-sizing:border-box;font-family:Arial,sans-serif}body{margin:0;background:var(--bg);color:#fff;padding:14px 14px 88px;text-align:center}
+.top{background:linear-gradient(145deg,#19233c,#111729);border:1px solid #29334d;border-radius:18px;padding:17px;margin-bottom:12px}
+.balance{font-size:clamp(32px,9vw,44px);font-weight:900;color:var(--gold);margin:8px 0}
+.small{color:var(--muted);font-size:13px}.coin{width:148px;height:148px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff0a8,#f5a623 65%,#a65c08);display:flex;align-items:center;justify-content:center;font-size:29px;font-weight:900;color:#342000;margin:22px auto;box-shadow:0 0 35px #f5a62355;user-select:none}
+.btn{background:var(--gold);color:#111;border:0;padding:14px;width:100%;border-radius:12px;font-size:16px;font-weight:900;margin-top:10px;cursor:pointer}
+.btn.secondary{background:#28334d;color:#fff}.btn:disabled{opacity:.5}
+.card{background:var(--panel);border:1px solid #27314a;border-radius:14px;padding:15px;margin-top:12px;text-align:left}
+.card b{color:var(--gold)}.tabs{position:fixed;bottom:0;left:0;right:0;background:#151a2e;display:flex;padding:11px 2px calc(11px + env(safe-area-inset-bottom));border-top:1px solid #30384d;z-index:5}
+.tab{flex:1;font-size:11px;color:#aab2c2;cursor:pointer}.tab.active{color:var(--gold);font-weight:900}
+.page{display:none}.page.active{display:block}input{width:100%;padding:12px;border-radius:10px;border:1px solid #303a55;margin-top:9px;background:#0b1020;color:#fff}
+.toast{background:#1ed760;color:#000;padding:11px;border-radius:10px;margin:12px 0;font-weight:900;display:none}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.row .btn{width:auto;min-width:105px;margin:0;padding:11px}
+a{color:var(--gold);word-break:break-all}.muted{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div id="page-mine" class="page active">
+ <div class="top"><img src="/pyramids-coin.png" alt="Pyramids Coin" style="width:116px;height:116px;object-fit:contain;border-radius:50%;margin:0 auto 8px"><div class="small">PYRAMIDS MINER</div><div class="balance"><span id="balance">0</span> PYR</div>
+ <div class="small">Mining Power: <span id="rate">1</span> PYR/sec</div><div class="small">Unclaimed: <span id="pending">0</span> PYR</div></div>
+ <div class="coin" style="background-image:url(/pyramids-coin.png);background-size:cover;color:transparent">PYR</div><div class="small">Mining is calculated securely by the server, even while you are away.</div>
+ <button class="btn" onclick="act('collect')">COLLECT</button><div id="toast" class="toast"></div>
+ <div class="card"><b>Mining status</b><p class="muted">Your mining earnings continue to accumulate from server time while the app is closed. Offline earnings are capped at 30 days.</p></div>
+</div>
+<div id="page-tasks" class="page"><div class="top"><h2>Tasks</h2><div class="small">Complete verified tasks to earn PYR</div></div><div id="tasks"></div></div>
+<div id="page-boost" class="page"><div class="top"><h2>Boost</h2></div>
+ <div class="card">Boost x2 — 500 PYR<button class="btn" onclick="boost(2)">Buy x2</button></div>
+ <div class="card">Boost x5 — 2,000 PYR<button class="btn" onclick="boost(5)">Buy x5</button></div></div>
+<div id="page-friends" class="page"><div class="top"><h2>Friends</h2><div class="small">Invite friends and grow your community</div></div>
+ <div class="card">Your invite link:<p><b id="invite"></b></p><button class="btn" onclick="copyInvite()">Copy invite link</button></div>
+ <div class="card">Friends invited: <b id="friends">0</b></div></div>
+<div id="page-profile" class="page"><div class="top"><h2>Profile</h2><div id="userName">PYRAMIDS Miner</div></div>
+ <div class="card">Total balance: <b id="profileBalance">0</b> PYR</div>
+ <div class="card">Wallet address<input id="wallet" placeholder="Enter your wallet address"><button class="btn" onclick="saveWallet()">Save wallet</button></div>
+ <div class="card">Request withdrawal<input id="withdrawAmount" type="number" min="1" placeholder="Amount in PYR"><button class="btn" onclick="withdraw()">Submit withdrawal request</button><p class="muted">Requests are reviewed by the project administrator. Approval does not mean tokens have been transferred.</p></div>
+ <div id="admin" class="card" style="display:none"><b>Admin Control Panel</b>
+ <h3>Coin & Mining Settings</h3>
+ <label>Coin name</label><input id="cfgName" value="Pyramids Coin">
+ <label>Coin symbol</label><input id="cfgSymbol" value="PYR">
+ <label>Coin price (USD)</label><input id="cfgPrice" type="number" min="0" step="0.00000001">
+ <label>Mining rate (PYR per second)</label><input id="cfgRate" type="number" min="0" step="0.00000001">
+ <label>Referral percentage</label><input id="cfgReferral" type="number" min="0" max="100" step="0.1">
+ <label>Minimum withdrawal</label><input id="cfgMinWithdraw" type="number" min="0" step="0.000001">
+ <label>Offline accrual cap (days)</label><input id="cfgCap" type="number" min="1" max="365">
+ <button class="btn" onclick="saveSettings()">Save project settings</button>
+ <h3>Withdrawal requests</h3><button class="btn secondary" onclick="loadAdmin()">Refresh requests</button><div id="adminRows"></div></div>
+ <div class="card"><b>Withdrawal history</b><div id="history" class="muted">No requests yet.</div></div>
+</div>
+<div class="tabs">
+ <div class="tab active" onclick="showPage('mine',this)">Mine</div><div class="tab" onclick="showPage('tasks',this)">Tasks</div>
+ <div class="tab" onclick="showPage('boost',this)">Boost</div><div class="tab" onclick="showPage('friends',this)">Friends</div><div class="tab" onclick="showPage('profile',this)">Profile</div>
+</div>
+<script>
+const tg=window.Telegram?.WebApp;
+tg?.ready();tg?.expand();
+let initData=tg?.initData||'', state=null, taskRows=[], taskDone=[];
+const params=new URLSearchParams(location.search);
+const startParam=tg?.initDataUnsafe?.start_param||params.get('start')||'';
+const ref=startParam.startsWith('ref_')?startParam.slice(4):'';
+const fmt=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:4});
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2600)}
+async function api(action,extra={}){const r=await fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,initData,ref,...extra})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
+function paint(){if(!state)return;document.getElementById('balance').textContent=fmt(state.balance);document.getElementById('pending').textContent=fmt(state.pending);document.getElementById('rate').textContent=fmt(state.rate);document.getElementById('profileBalance').textContent=fmt(state.balance);document.getElementById('wallet').value=state.wallet||'';document.getElementById('userName').textContent=state.first_name||'PYRAMIDS Miner'}
+function renderTasks(){const el=document.getElementById('tasks');el.innerHTML='';for(const t of taskRows){const done=taskDone.some(x=>x.task_id===t.id&&x.status==='approved');const card=document.createElement('div');card.className='card';const title=document.createElement('div');title.textContent=t.title+'  +'+fmt(t.reward)+' PYR';const b=document.createElement('button');b.className='btn';b.textContent=done?'Completed':'Verify & claim';b.disabled=done;b.onclick=()=>claimTask(t.id,b);card.append(title,b);el.append(card)}}
+async function refresh(){try{const d=await api('start');state=d.user;taskRows=d.tasks;taskDone=d.done;paint();renderTasks();document.getElementById('friends').textContent=d.friends;document.getElementById('invite').textContent=`https://t.me/${window.BOT_USERNAME||'YOUR_BOT_USERNAME'}?start=ref_${state.referral_code}`;document.getElementById('history').textContent=d.withdrawals.length?d.withdrawals.map(w=>`${w.amount} PYR — ${w.status}`).join(' | '):'No requests yet.';if(d.isAdmin){document.getElementById('admin').style.display='block';loadSettings();}}catch(e){toast(e.message)}}
+async function act(action){try{const d=await api(action);if(d.state)state={...state,...d.state};await refresh();toast('Balance updated');}catch(e){toast(e.message)}}
+async function boost(mult){try{await api('boost',{mult});await refresh();toast('Boost activated')}catch(e){toast(e.message)}}
+async function claimTask(taskId,btn){btn.disabled=true;try{const d=await api('task',{taskId});toast(`Task completed: +${d.reward} PYR`);await refresh()}catch(e){toast(e.message);btn.disabled=false}}
+async function saveWallet(){try{await api('save_wallet',{wallet:document.getElementById('wallet').value});toast('Wallet saved')}catch(e){toast(e.message)}}
+async function withdraw(){try{const amount=Number(document.getElementById('withdrawAmount').value);await api('withdraw',{amount});document.getElementById('withdrawAmount').value='';await refresh();toast('Withdrawal request submitted')}catch(e){toast(e.message)}}
+function copyInvite(){const v=document.getElementById('invite').textContent;navigator.clipboard?.writeText(v).then(()=>toast('Invite link copied')).catch(()=>toast(v))}
+async function loadSettings(){try{const d=await api('admin_get_settings');const s=d.settings;document.getElementById('cfgName').value=s.coin_name;document.getElementById('cfgSymbol').value=s.coin_symbol;document.getElementById('cfgPrice').value=s.coin_price;document.getElementById('cfgRate').value=s.mining_rate;document.getElementById('cfgReferral').value=s.referral_percent;document.getElementById('cfgMinWithdraw').value=s.min_withdrawal;document.getElementById('cfgCap').value=s.offline_cap_days}catch(e){toast(e.message)}}
+async function saveSettings(){try{const settings={coin_name:document.getElementById('cfgName').value,coin_symbol:document.getElementById('cfgSymbol').value,coin_price:Number(document.getElementById('cfgPrice').value),mining_rate:Number(document.getElementById('cfgRate').value),referral_percent:Number(document.getElementById('cfgReferral').value),min_withdrawal:Number(document.getElementById('cfgMinWithdraw').value),offline_cap_days:Number(document.getElementById('cfgCap').value)};await api('admin_save_settings',{settings});toast('Settings saved')}catch(e){toast(e.message)}}
+async function loadAdmin(){try{const d=await api('admin_list');const el=document.getElementById('adminRows');el.innerHTML='';for(const w of d.withdrawals){const row=document.createElement('div');row.className='card';row.textContent=`${w.amount} PYR | ${w.wallet} | ${w.status} | user ${w.telegram_id}`;if(w.status==='pending'){for(const status of ['approved','paid','rejected']){const b=document.createElement('button');b.className='btn secondary';b.textContent=status;b.onclick=async()=>{try{await api('admin_review',{withdrawalId:w.id,status});loadAdmin();toast('Request updated')}catch(e){toast(e.message)}};row.append(b)}}el.append(row)}}catch(e){toast(e.message)}}
+function showPage(n,el){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.getElementById('page-'+n).classList.add('active');el.classList.add('active')}
+refresh();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+</script>
+</body></html>
