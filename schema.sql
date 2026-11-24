@@ -1,0 +1,19 @@
+CREATE TABLE IF NOT EXISTS settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  mining_rate NUMERIC NOT NULL DEFAULT 500,
+  daily_cap NUMERIC NOT NULL DEFAULT 500,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO settings (id,mining_rate,daily_cap) VALUES (1,500,500) ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS users (
+  telegram_id TEXT PRIMARY KEY,
+  username TEXT,
+  first_name TEXT,
+  balance NUMERIC NOT NULL DEFAULT 0,
+  pending NUMERIC NOT NULL DEFAULT 0,
+  earned_today NUMERIC NOT NULL DEFAULT 0,
+  day_started_at TIMESTAMPTZ NOT NULL DEFAULT date_trunc('day', NOW()),
+  last_update TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
