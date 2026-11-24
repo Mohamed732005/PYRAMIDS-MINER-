@@ -46,6 +46,28 @@ function send(res,status,obj){res.status(status).json(obj)}
 export default async function handler(req,res){
   try{
     const path=(req.url||"").split("?")[0].replace(/^\/api\/?/,"");
+    // --- Telegram Bot Webhook ---
+const BOT_PATH = BOT_TOKEN;
+if (req.method === "POST" && path === BOT_PATH) {
+  const update = req.body || {};
+  const msg = update.message;
+  if (msg && msg.text === "/start") {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        chat_id: msg.chat.id,
+        text: "أهلاً بيك في PYRAMIDS MINER ⛏️\nدوس على الزرار عشان تبدأ التعدين:",
+        reply_markup: {
+          inline_keyboard: [[
+            { text: "⛏️ افتح التعدين", web_app: { url: "https://pyramids-miner.vercel.app/" } }
+          ]]
+        }
+      })
+    });
+  }
+  return send(res, 200, {ok:true});
+}
     const user=verifyInitData(req.headers["x-telegram-init-data"]);
     if(path==="state" && req.method==="GET") return send(res,200,await ensure(user));
     if(path==="claim" && req.method==="POST"){
